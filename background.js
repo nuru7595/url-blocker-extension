@@ -16,9 +16,21 @@ function normalize(str) {
   return str.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "").toLowerCase().trim();
 }
 
+// Migrate legacy string items to objects
+function migrateItem(item) {
+  if (typeof item === "string") return { url: item, enabled: true };
+  return item;
+}
+
 async function getSettings() {
   return new Promise((resolve) => {
-    chrome.storage.sync.get({ blockedDomains: [], unblockPaths: [], enabled: true }, resolve);
+    chrome.storage.sync.get({ blockedDomains: [], unblockPaths: [], enabled: true }, (data) => {
+      resolve({
+        blockedDomains: data.blockedDomains.map(migrateItem),
+        unblockPaths: data.unblockPaths.map(migrateItem),
+        enabled: data.enabled,
+      });
+    });
   });
 }
 
@@ -29,17 +41,23 @@ function shouldBlock(tabUrl, blockedDomains, unblockPaths) {
   const host = getHostname(tabUrl);
   const fullPath = getPathname(tabUrl);
 
-  const domainBlocked = blockedDomains.some(d => {
-    const nd = normalize(d);
-    return host === nd || host.endsWith("." + nd);
-  });
+  // Only consider enabled blocked domains
+  const domainBlocked = blockedDomains
+    .filter(d => d.enabled)
+    .some(d => {
+      const nd = normalize(d.url);
+      return host === nd || host.endsWith("." + nd);
+    });
 
   if (!domainBlocked) return false;
 
-  const pathUnblocked = unblockPaths.some(p => {
-    const np = normalize(p);
-    return fullPath === np || fullPath.startsWith(np + "/") || fullPath.startsWith(np + "?");
-  });
+  // Only consider enabled allowed paths
+  const pathUnblocked = unblockPaths
+    .filter(p => p.enabled)
+    .some(p => {
+      const np = normalize(p.url);
+      return fullPath === np || fullPath.startsWith(np + "/") || fullPath.startsWith(np + "?");
+    });
 
   return !pathUnblocked;
 }
