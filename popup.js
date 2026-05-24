@@ -2,16 +2,17 @@
 let blockedDomains = [];
 let unblockPaths = [];
 let enabled = true;
+// mode: "selective" = block listed domains, "lockdown" = block everything except allowed
+let mode = "selective";
 
 function normalize(val) {
   return val.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "").toLowerCase().trim();
 }
 
 function save() {
-  chrome.storage.sync.set({ blockedDomains, unblockPaths, enabled });
+  chrome.storage.sync.set({ blockedDomains, unblockPaths, enabled, mode });
 }
 
-// Migrate legacy string arrays to object arrays
 function migrateItem(item) {
   if (typeof item === "string") return { url: item, enabled: true };
   return item;
@@ -44,34 +45,74 @@ function renderList(listId, emptyId, items, dotClass, type) {
   }
 }
 
+function renderMode() {
+  const isLockdown = mode === "lockdown";
+  document.body.classList.toggle("lockdown", isLockdown);
+
+  document.getElementById("mode-selective").className =
+    "mode-btn" + (isLockdown ? "" : " active-selective");
+  document.getElementById("mode-lockdown").className =
+    "mode-btn" + (isLockdown ? " active-lockdown" : "");
+
+  document.getElementById("lockdown-banner").classList.toggle("show", isLockdown);
+
+  document.getElementById("header-subtitle").textContent = isLockdown
+    ? "Lockdown — only allowed pages reachable"
+    : "Block domains, allow specific pages";
+
+  document.getElementById("path-desc").textContent = isLockdown
+    ? "Only these pages are accessible — everything else is blocked"
+    : "These specific pages stay accessible";
+
+  document.getElementById("arrow-hint").style.display = isLockdown ? "none" : "flex";
+}
+
 function renderStatus() {
-  const bar = document.getElementById("status-bar");
-  const dot = document.getElementById("status-dot");
+  const bar  = document.getElementById("status-bar");
+  const dot  = document.getElementById("status-dot");
   const text = document.getElementById("status-text");
   const label = document.getElementById("toggle-label");
 
-  const activeBlocked = blockedDomains.filter(d => d.enabled).length;
-  const activePaths = unblockPaths.filter(p => p.enabled).length;
-
-  if (enabled) {
-    bar.className = "status-bar status-on";
-    dot.className = "status-dot sdot-on";
-    text.textContent = `Blocking ${activeBlocked} domain(s) · ${activePaths} page(s) allowed`;
-    label.textContent = "On";
-  } else {
-    bar.className = "status-bar status-off";
-    dot.className = "status-dot sdot-off";
+  if (!enabled) {
+    bar.className  = "status-bar status-off";
+    dot.className  = "status-dot sdot-off";
     text.textContent = "Paused — all URLs accessible";
     label.textContent = "Off";
+    return;
+  }
+
+  if (mode === "lockdown") {
+    const activeAllowed = unblockPaths.filter(p => p.enabled).length;
+    bar.className  = "status-bar status-lock";
+    dot.className  = "status-dot sdot-lock";
+    text.textContent = `Lockdown · ${activeAllowed} page(s) allowed`;
+    label.textContent = "On";
+  } else {
+    const activeBlocked = blockedDomains.filter(d => d.enabled).length;
+    const activePaths   = unblockPaths.filter(p => p.enabled).length;
+    bar.className  = "status-bar status-on";
+    dot.className  = "status-dot sdot-on";
+    text.textContent = `Blocking ${activeBlocked} domain(s) · ${activePaths} page(s) allowed`;
+    label.textContent = "On";
   }
 }
 
 function render() {
   renderList("domain-list", "domain-empty", blockedDomains, "dot-red", "domain");
-  renderList("path-list", "path-empty", unblockPaths, "dot-green", "path");
+  renderList("path-list",   "path-empty",   unblockPaths,   "dot-green", "path");
+  renderMode();
   renderStatus();
 }
 
+// Mode buttons
+document.getElementById("mode-selective").addEventListener("click", () => {
+  mode = "selective"; save(); render();
+});
+document.getElementById("mode-lockdown").addEventListener("click", () => {
+  mode = "lockdown"; save(); render();
+});
+
+// Add domain
 document.getElementById("domain-add-btn").addEventListener("click", () => {
   const input = document.getElementById("domain-input");
   const val = normalize(input.value);
@@ -84,6 +125,7 @@ document.getElementById("domain-add-btn").addEventListener("click", () => {
   input.value = "";
 });
 
+// Add allowed path
 document.getElementById("path-add-btn").addEventListener("click", () => {
   const input = document.getElementById("path-input");
   const val = normalize(input.value);
@@ -102,37 +144,40 @@ document.getElementById("path-input").addEventListener("keydown", e => {
   if (e.key === "Enter") document.getElementById("path-add-btn").click();
 });
 
-// Handle delete buttons
+// Delete
 document.addEventListener("click", (e) => {
   const btn = e.target.closest(".del-btn");
   if (!btn) return;
-  const i = parseInt(btn.dataset.i);
+  const i    = parseInt(btn.dataset.i);
   const list = btn.dataset.list;
   if (list === "domain-list") blockedDomains.splice(i, 1);
   else unblockPaths.splice(i, 1);
   save(); render();
 });
 
-// Handle per-item toggle checkboxes
+// Per-item toggle
 document.addEventListener("change", (e) => {
   const cb = e.target.closest(".item-toggle-cb");
   if (!cb) return;
-  const i = parseInt(cb.dataset.i);
+  const i    = parseInt(cb.dataset.i);
   const list = cb.dataset.list;
   if (list === "domain-list") blockedDomains[i].enabled = cb.checked;
   else unblockPaths[i].enabled = cb.checked;
   save(); render();
 });
 
+// Global on/off
 document.getElementById("enabled-toggle").addEventListener("change", (e) => {
   enabled = e.target.checked;
   save(); render();
 });
 
-chrome.storage.sync.get({ blockedDomains: [], unblockPaths: [], enabled: true }, (data) => {
+// Load from storage
+chrome.storage.sync.get({ blockedDomains: [], unblockPaths: [], enabled: true, mode: "selective" }, (data) => {
   blockedDomains = data.blockedDomains.map(migrateItem);
-  unblockPaths = data.unblockPaths.map(migrateItem);
+  unblockPaths   = data.unblockPaths.map(migrateItem);
   enabled = data.enabled;
+  mode    = data.mode || "selective";
   document.getElementById("enabled-toggle").checked = enabled;
   render();
 });

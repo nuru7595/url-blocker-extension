@@ -47,11 +47,61 @@
     input:checked + .slider { background: #185FA5; }
     input:checked + .slider::before { transform: translateX(17px); }
 
+    /* Mode switcher */
+    .mode-bar {
+      display: flex;
+      gap: 0;
+      padding: 10px 16px;
+      background: #fff;
+      border-bottom: 0.5px solid #e0deda;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 6px 0;
+      font-size: 12px;
+      font-weight: 500;
+      border: 0.5px solid #d3d1c7;
+      background: #fafaf9;
+      color: #888780;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .mode-btn:first-child { border-radius: 6px 0 0 6px; border-right: none; }
+    .mode-btn:last-child  { border-radius: 0 6px 6px 0; border-left: none; }
+    .mode-btn.active-selective {
+      background: #FCEBEB; color: #A32D2D; border-color: #E24B4A;
+      font-weight: 600;
+    }
+    .mode-btn.active-lockdown {
+      background: #1a1a18; color: #fff; border-color: #1a1a18;
+      font-weight: 600;
+    }
+
+    /* Lockdown banner */
+    .lockdown-banner {
+      display: none;
+      background: #1a1a18;
+      color: #f0ede8;
+      font-size: 11.5px;
+      padding: 7px 16px;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 0.5px solid #333;
+    }
+    .lockdown-banner.show { display: flex; }
+    .lockdown-icon { font-size: 13px; }
+
     .section {
       padding: 12px 16px;
       border-bottom: 0.5px solid #e0deda;
     }
     .section:last-of-type { border-bottom: none; }
+
+    /* Hide blocked-domains section in lockdown mode */
+    body.lockdown #blocked-section { display: none; }
+    body.lockdown .arrow-hint { display: none; }
+    body.lockdown #path-section .section-header .badge { background: #EAF3DE; color: #3B6D11; }
+    body.lockdown #path-section .section-desc::after { content: ' — everything else is blocked'; }
 
     .section-header {
       display: flex; align-items: center; gap: 8px;
@@ -143,11 +193,13 @@
       display: flex; align-items: center; gap: 6px;
       font-size: 11.5px;
     }
-    .status-on { background: #EAF3DE; color: #3B6D11; }
+    .status-on  { background: #EAF3DE; color: #3B6D11; }
     .status-off { background: #F1EFE8; color: #888780; }
+    .status-lock { background: #1a1a18; color: #9ddfbe; }
     .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-    .sdot-on { background: #1D9E75; }
-    .sdot-off { background: #b4b2a9; }
+    .sdot-on   { background: #1D9E75; }
+    .sdot-off  { background: #b4b2a9; }
+    .sdot-lock { background: #9ddfbe; }
 
     .arrow-hint {
       font-size: 11px; color: #b4b2a9;
@@ -165,7 +217,7 @@
     <div class="shield-icon">🛡️</div>
     <div>
       <div class="title">URL Blocker</div>
-      <div class="subtitle">Block domains, allow specific pages</div>
+      <div class="subtitle" id="header-subtitle">Block domains, allow specific pages</div>
     </div>
   </div>
   <div class="toggle-wrap">
@@ -177,8 +229,20 @@
   </div>
 </div>
 
-<!-- BLOCKED DOMAINS -->
-<div class="section">
+<!-- MODE SWITCHER -->
+<div class="mode-bar">
+  <button class="mode-btn active-selective" id="mode-selective">🚫 Block selected</button>
+  <button class="mode-btn" id="mode-lockdown">🔒 Block all except allowed</button>
+</div>
+
+<!-- LOCKDOWN BANNER -->
+<div class="lockdown-banner" id="lockdown-banner">
+  <span class="lockdown-icon">🔒</span>
+  <span>Lockdown mode — only URLs in the allow list can be visited</span>
+</div>
+
+<!-- BLOCKED DOMAINS (hidden in lockdown) -->
+<div class="section" id="blocked-section">
   <div class="section-header">
     <span class="badge badge-red">🚫 Block</span>
     <div>
@@ -195,13 +259,13 @@
   </div>
 </div>
 
-<!-- UNBLOCKED PATHS -->
-<div class="section">
+<!-- ALLOWED PATHS -->
+<div class="section" id="path-section">
   <div class="section-header">
     <span class="badge badge-green">✅ Allow</span>
     <div>
       <div class="section-title">Allowed Pages</div>
-      <div class="section-desc">These specific pages stay accessible</div>
+      <div class="section-desc" id="path-desc">These specific pages stay accessible</div>
     </div>
   </div>
   <div class="add-row">
@@ -213,7 +277,7 @@
   </div>
 </div>
 
-<div class="arrow-hint">
+<div class="arrow-hint" id="arrow-hint">
   Example: Block <span>facebook.com</span> → Allow <i>facebook.com/stories</i>
 </div>
 
