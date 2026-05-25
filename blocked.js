@@ -40,21 +40,35 @@ function renderAllowedLinks(paths) {
   const linksDiv = document.createElement("div");
   linksDiv.className = "allowed-links";
 
+  const sectionNames = paths.map((p) => {
+    const parts = normalizeUrl(p).split("/");
+    const section = parts.slice(1).join("/");
+    return section
+      ? section.charAt(0).toUpperCase() + section.slice(1)
+      : displayName;
+  });
+
+  const lastName = sectionNames.pop();
+  const headingText =
+    sectionNames.length > 0
+      ? `তবে আপনি চাইলে ${displayName} এর ${sectionNames.join(", ")} আর ${lastName} দেখতে পারবেন, অন্য কিছু না 🥱`
+      : `তবে আপনি চাইলে ${displayName} এর ${lastName} দেখতে পারবেন, অন্য কিছু না 🥱`;
+
   const heading = document.createElement("div");
   heading.className = "allowed-heading";
-  heading.textContent = "তবে আপনি চাইলে এই পেজগুলোতে যেতে পারেন 🙃";
+  heading.textContent = headingText;
   linksDiv.appendChild(heading);
 
-  paths.forEach(p => linksDiv.appendChild(buildLink(p)));
+  paths.forEach((p) => linksDiv.appendChild(buildLink(p)));
 
   document.querySelector(".buttons").before(linksDiv);
 }
 
-chrome.storage.sync.get({ unblockPaths: [] }, data => {
+chrome.storage.sync.get({ unblockPaths: [] }, (data) => {
   const relatedPaths = data.unblockPaths
-    .filter(p => typeof p === "string" ? true : p.enabled)
-    .map(p => typeof p === "string" ? p : p.url)
-    .filter(p => {
+    .filter((p) => (typeof p === "string" ? true : p.enabled))
+    .map((p) => (typeof p === "string" ? p : p.url))
+    .filter((p) => {
       const norm = normalizeUrl(p);
       return norm === blockedHostname || norm.startsWith(blockedHostname + "/");
     });
@@ -62,5 +76,13 @@ chrome.storage.sync.get({ unblockPaths: [] }, data => {
   if (relatedPaths.length > 0) renderAllowedLinks(relatedPaths);
 });
 
-document.getElementById("close-tab").addEventListener("click", () => chrome.runtime.sendMessage({ action: "closeTab" }));
-document.getElementById("new-tab").addEventListener("click", () => chrome.runtime.sendMessage({ action: "newTab" }));
+document
+  .getElementById("close-tab")
+  .addEventListener("click", () =>
+    chrome.runtime.sendMessage({ action: "closeTab" }),
+  );
+document
+  .getElementById("new-tab")
+  .addEventListener("click", () =>
+    chrome.runtime.sendMessage({ action: "newTab" }),
+  );
