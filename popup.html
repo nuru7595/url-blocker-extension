@@ -5,6 +5,7 @@
   <title>URL Blocker</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
       width: 380px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -12,6 +13,7 @@
       color: #1a1a18;
     }
 
+    /* ── Header ── */
     .header {
       background: #fff;
       border-bottom: 0.5px solid #e0deda;
@@ -31,6 +33,7 @@
     .title { font-size: 15px; font-weight: 600; }
     .subtitle { font-size: 11px; color: #888780; margin-top: 1px; }
 
+    /* ── Global on/off toggle ── */
     .toggle-wrap { display: flex; align-items: center; gap: 7px; }
     .toggle-label { font-size: 12px; color: #888780; }
     .toggle { position: relative; width: 38px; height: 21px; }
@@ -47,10 +50,9 @@
     input:checked + .slider { background: #185FA5; }
     input:checked + .slider::before { transform: translateX(17px); }
 
-    /* Mode switcher */
+    /* ── Mode switcher ── */
     .mode-bar {
       display: flex;
-      gap: 0;
       padding: 10px 16px;
       background: #fff;
       border-bottom: 0.5px solid #e0deda;
@@ -64,20 +66,18 @@
       background: #fafaf9;
       color: #888780;
       cursor: pointer;
-      transition: background 0.15s, color 0.15s;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
     .mode-btn:first-child { border-radius: 6px 0 0 6px; border-right: none; }
-    .mode-btn:last-child  { border-radius: 0 6px 6px 0; border-left: none; }
+    .mode-btn:last-child  { border-radius: 0 6px 6px 0; }
     .mode-btn.active-selective {
-      background: #FCEBEB; color: #A32D2D; border-color: #E24B4A;
-      font-weight: 600;
+      background: #FCEBEB; color: #A32D2D; border-color: #E24B4A; font-weight: 600;
     }
     .mode-btn.active-lockdown {
-      background: #1a1a18; color: #fff; border-color: #1a1a18;
-      font-weight: 600;
+      background: #1a1a18; color: #fff; border-color: #1a1a18; font-weight: 600;
     }
 
-    /* Lockdown banner */
+    /* ── Lockdown banner ── */
     .lockdown-banner {
       display: none;
       background: #1a1a18;
@@ -86,22 +86,17 @@
       padding: 7px 16px;
       align-items: center;
       gap: 6px;
-      border-bottom: 0.5px solid #333;
+      border-bottom: 0.5px solid #2e2e2e;
     }
     .lockdown-banner.show { display: flex; }
-    .lockdown-icon { font-size: 13px; }
 
+    /* ── Sections ── */
     .section {
       padding: 12px 16px;
       border-bottom: 0.5px solid #e0deda;
     }
-    .section:last-of-type { border-bottom: none; }
-
-    /* Hide blocked-domains section in lockdown mode */
     body.lockdown #blocked-section { display: none; }
-    body.lockdown .arrow-hint { display: none; }
-    body.lockdown #path-section .section-header .badge { background: #EAF3DE; color: #3B6D11; }
-    body.lockdown #path-section .section-desc::after { content: ' — everything else is blocked'; }
+    body.lockdown #arrow-hint { display: none; }
 
     .section-header {
       display: flex; align-items: center; gap: 8px;
@@ -110,38 +105,40 @@
     .badge {
       font-size: 11px; font-weight: 600;
       padding: 2px 8px; border-radius: 20px;
+      white-space: nowrap;
     }
-    .badge-red { background: #FCEBEB; color: #A32D2D; }
+    .badge-red   { background: #FCEBEB; color: #A32D2D; }
     .badge-green { background: #EAF3DE; color: #3B6D11; }
+    .section-title { font-size: 13px; font-weight: 600; }
+    .section-desc  { font-size: 11px; color: #888780; margin-top: 2px; }
 
-    .section-title { font-size: 13px; font-weight: 600; color: #1a1a18; }
-    .section-desc { font-size: 11px; color: #888780; margin-top: 2px; }
-
+    /* ── Add row ── */
     .add-row { display: flex; gap: 6px; margin-bottom: 8px; }
-
     input[type="text"] {
       flex: 1; height: 32px;
       border: 0.5px solid #d3d1c7; border-radius: 6px;
       padding: 0 10px; font-size: 13px;
       background: #fff; color: #1a1a18; outline: none;
+      font-family: inherit;
     }
     input[type="text"]:focus {
       border-color: #185FA5;
-      box-shadow: 0 0 0 2px rgba(24,95,165,0.1);
+      box-shadow: 0 0 0 2px rgba(24, 95, 165, 0.1);
     }
     input[type="text"]::placeholder { color: #b4b2a9; }
-
     .add-btn {
       height: 32px; padding: 0 12px;
       border: none; border-radius: 6px;
       font-size: 13px; font-weight: 500; cursor: pointer;
-      white-space: nowrap;
+      white-space: nowrap; font-family: inherit;
+      transition: background 0.15s;
     }
-    .add-btn-red { background: #E24B4A; color: white; }
-    .add-btn-red:hover { background: #A32D2D; }
-    .add-btn-green { background: #1D9E75; color: white; }
-    .add-btn-green:hover { background: #0F6E56; }
+    .add-btn-red   { background: #E24B4A; color: #fff; }
+    .add-btn-red:hover   { background: #c23a39; }
+    .add-btn-green { background: #1D9E75; color: #fff; }
+    .add-btn-green:hover { background: #178560; }
 
+    /* ── URL list ── */
     .url-list {
       display: flex; flex-direction: column; gap: 4px;
       max-height: 140px; overflow-y: auto;
@@ -150,22 +147,19 @@
       display: flex; align-items: center; gap: 8px;
       background: #fff; border: 0.5px solid #e0deda;
       border-radius: 7px; padding: 7px 10px;
+      transition: opacity 0.15s;
     }
+    .url-item-disabled { opacity: 0.5; }
     .url-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-    .dot-red { background: #E24B4A; }
+    .dot-red   { background: #E24B4A; }
     .dot-green { background: #1D9E75; }
     .url-text {
-      flex: 1; font-size: 12.5px; color: #1a1a18;
+      flex: 1; font-size: 12px; color: #1a1a18;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       font-family: monospace;
     }
-    .del-btn {
-      background: none; border: none; color: #b4b2a9;
-      cursor: pointer; font-size: 17px; padding: 0; line-height: 1; flex-shrink: 0;
-    }
-    .del-btn:hover { color: #E24B4A; }
 
-    /* Per-item mini toggle */
+    /* ── Per-item toggle ── */
     .item-toggle {
       position: relative; width: 28px; height: 16px;
       flex-shrink: 0; cursor: pointer;
@@ -180,34 +174,43 @@
       width: 10px; height: 10px; left: 3px; top: 3px;
       background: white; border-radius: 50%; transition: transform 0.18s;
     }
-    .item-toggle input:checked + .item-slider-red { background: #E24B4A; }
+    .item-toggle input:checked + .item-slider-red   { background: #E24B4A; }
     .item-toggle input:checked + .item-slider-green { background: #1D9E75; }
     .item-toggle input:checked + .item-slider::before { transform: translateX(12px); }
 
-    .url-item-disabled { opacity: 0.6; }
+    /* ── Delete button ── */
+    .del-btn {
+      background: none; border: none; color: #c8c5bc;
+      cursor: pointer; font-size: 17px; padding: 0; line-height: 1; flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .del-btn:hover { color: #E24B4A; }
 
     .empty { font-size: 12px; color: #b4b2a9; text-align: center; padding: 12px 0; }
 
+    /* ── Arrow hint ── */
+    #arrow-hint {
+      font-size: 11px; color: #b4b2a9;
+      padding: 8px 16px;
+      display: flex; align-items: center; gap: 6px;
+      border-bottom: 0.5px solid #e0deda;
+    }
+    #arrow-hint .hint-block { color: #E24B4A; font-family: monospace; }
+    #arrow-hint .hint-allow { color: #1D9E75; font-family: monospace; }
+
+    /* ── Status bar ── */
     .status-bar {
       padding: 8px 16px;
       display: flex; align-items: center; gap: 6px;
       font-size: 11.5px;
     }
-    .status-on  { background: #EAF3DE; color: #3B6D11; }
-    .status-off { background: #F1EFE8; color: #888780; }
+    .status-on   { background: #EAF3DE; color: #3B6D11; }
+    .status-off  { background: #F1EFE8; color: #888780; }
     .status-lock { background: #1a1a18; color: #9ddfbe; }
-    .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .status-dot  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
     .sdot-on   { background: #1D9E75; }
     .sdot-off  { background: #b4b2a9; }
     .sdot-lock { background: #9ddfbe; }
-
-    .arrow-hint {
-      font-size: 11px; color: #b4b2a9;
-      padding: 0 16px 8px;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .arrow-hint span { color: #E24B4A; font-family: monospace; font-size: 12px; }
-    .arrow-hint i { color: #1D9E75; font-family: monospace; font-size: 12px; }
   </style>
 </head>
 <body>
@@ -229,19 +232,16 @@
   </div>
 </div>
 
-<!-- MODE SWITCHER -->
 <div class="mode-bar">
   <button class="mode-btn active-selective" id="mode-selective">🚫 Block selected</button>
   <button class="mode-btn" id="mode-lockdown">🔒 Block all except allowed</button>
 </div>
 
-<!-- LOCKDOWN BANNER -->
 <div class="lockdown-banner" id="lockdown-banner">
-  <span class="lockdown-icon">🔒</span>
-  <span>Lockdown mode — only URLs in the allow list can be visited</span>
+  <span>🔒</span>
+  <span>Lockdown — only URLs in the allow list can be visited</span>
 </div>
 
-<!-- BLOCKED DOMAINS (hidden in lockdown) -->
 <div class="section" id="blocked-section">
   <div class="section-header">
     <span class="badge badge-red">🚫 Block</span>
@@ -259,7 +259,6 @@
   </div>
 </div>
 
-<!-- ALLOWED PATHS -->
 <div class="section" id="path-section">
   <div class="section-header">
     <span class="badge badge-green">✅ Allow</span>
@@ -277,8 +276,8 @@
   </div>
 </div>
 
-<div class="arrow-hint" id="arrow-hint">
-  Example: Block <span>facebook.com</span> → Allow <i>facebook.com/stories</i>
+<div id="arrow-hint">
+  Example: Block <span class="hint-block">facebook.com</span> → Allow <span class="hint-allow">facebook.com/stories</span>
 </div>
 
 <div class="status-bar status-on" id="status-bar">
