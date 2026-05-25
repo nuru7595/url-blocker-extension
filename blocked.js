@@ -51,8 +51,8 @@ function renderAllowedLinks(paths) {
   const lastName = sectionNames.pop();
   const headingText =
     sectionNames.length > 0
-      ? `তবে আপনি চাইলে ${displayName} এর ${sectionNames.join(", ")} আর ${lastName} দেখতে পারবেন, অন্য কিছু না 🥱`
-      : `তবে আপনি চাইলে ${displayName} এর ${lastName} দেখতে পারবেন, অন্য কিছু না 🥱`;
+      ? `আপনি শুধু ${displayName} এর ${sectionNames.join(", ")} আর ${lastName} দেখতে পারবেন, অন্য কিছু না 🥱`
+      : `আপনি শুধু ${displayName} এর ${lastName} দেখতে পারবেন, অন্য কিছু না`;
 
   const heading = document.createElement("div");
   heading.className = "allowed-heading";
